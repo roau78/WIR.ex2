@@ -1,11 +1,15 @@
 package webdata;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -80,6 +84,15 @@ public class SlowIndexWriter {
     private ArrayList<ReviewData> reviewListTemp;
     private ArrayList<Integer> reviewDataList;
 
+    private static final int MAX_WORDS_PER_FILE = 10000;
+    private static final int MERGE_MAX_WORDS_BEFORE_WRITE_TO_DISK = 10000;
+    private String inputFile;
+    private String[] reviewBuffer;
+    private HashSet<String> tokenSet;
+    private HashSet<String> productSet;
+    private String tokeDicPath;
+    private String productDicPath;
+
     public SlowIndexWriter() {
         this.tokenMapTemp = new HashMap<>();
         this.currentReviewId = 1;
@@ -90,11 +103,15 @@ public class SlowIndexWriter {
         this.maxHelpDenominator = 0;
         this.totalAmountOfDiffProducts = 0;
         this.maxNumOfTokensInReview = 0;
+        this.reviewBuffer = new String[4];
+        this.tokenSet = new HashSet<>();
+        this.productSet = new HashSet<>();
         initCharCoder();
     }
 
     private boolean dirPathCheck(String inputFile, String dir) {
         this.dirPath = dir;
+        this.inputFile = inputFile;
         try {
             this.inputBuffer = new BufferedReader(new FileReader(inputFile));
         } catch (FileNotFoundException e) {
@@ -116,13 +133,104 @@ public class SlowIndexWriter {
         return true;
     }
 
-    private boolean parseReviews() {
+    private boolean buildDic() {
+        long start = System.nanoTime();
+        String productFilePath = this.dirPath + "/pFile_";
+        String tokenFilePath = this.dirPath + "/tFile_";
+        String phase0 = "0_";
+        int productFileIndex = 0, tokenFileIndex = 0;
+
         int ret;
         while (true) {
-            ret = this.parseReview();
+            ret = this.getReview();
             if (ret != PARSE_SUCCESSFUL_HAS_MORE_DATA){
                 break;
             }
+            this.productSet.add(this.reviewBuffer[RESULT_PRODUCT_ID_INDEX]);
+            String[] tokenList = this.reviewBuffer[RESULT_TEXT_INDEX].toLowerCase().replaceAll("[\\W]|_", " ").split(" +");
+            for (int i = 0; i < tokenList.length; i++) {
+                if (tokenList[i].length() > 0) {
+                    this.tokenSet.add(tokenList[i]);
+                }
+            }
+
+            if (this.productSet.size() >= MAX_WORDS_PER_FILE) {
+                emptySet(this.productSet, productFilePath + phase0 + Integer.toString(productFileIndex));
+                productFileIndex++;
+            }
+
+            if (this.tokenSet.size() >= MAX_WORDS_PER_FILE) {
+                emptySet(this.tokenSet, tokenFilePath + phase0 + Integer.toString(tokenFileIndex));
+                tokenFileIndex++;
+            }
+        }
+
+        if (ret == FAILED_TO_PARSE) {
+            return false;
+        }
+
+        if (this.productSet.size() > 0) {
+            emptySet(this.productSet, productFilePath + phase0 + Integer.toString(productFileIndex));
+            productFileIndex++;
+        }
+
+        if (this.tokenSet.size() > 0) {
+            emptySet(this.tokenSet, tokenFilePath + phase0 + Integer.toString(tokenFileIndex));
+            tokenFileIndex++;
+        }
+        this.tokeDicPath = this.mergeDicFiles(tokenFilePath, tokenFileIndex);
+        this.productDicPath = this.mergeDicFiles(productFilePath, productFileIndex);
+
+        try {
+            this.inputBuffer.close();
+            this.inputBuffer = new BufferedReader(new FileReader(inputFile));
+        } catch (IOException e) {
+            System.out.println("Failed to reopen Review file");
+            e.printStackTrace();
+        }
+        System.out.println("build dic time: " + Double.toString(((System.nanoTime() - start) * 0.000000001)/60) + " minutes");
+        return true;
+    }
+
+    private String mergeDicFiles(String filesPrefix, int numOfFiles) {
+        long start = System.nanoTime();
+        int newIndex = 0;
+        int phase = 0;
+        String f1, f2, out;
+
+        while (numOfFiles > 1) {
+            for (int i = 0; i < numOfFiles - (numOfFiles % 2); i += 2) {
+                f1 = filesPrefix + Integer.toString(phase) + "_" + Integer.toString(i);
+                f2 = filesPrefix + Integer.toString(phase) + "_" + Integer.toString(i + 1);
+                out = filesPrefix + Integer.toString(phase + 1) + "_" + Integer.toString(newIndex);
+                ReadWriteUtils.sortedFilesMerger(f1, f2, out, MERGE_MAX_WORDS_BEFORE_WRITE_TO_DISK);
+                ReadWriteUtils.deleteFile(f1);
+                ReadWriteUtils.deleteFile(f2);
+                newIndex++;
+            }
+            if (numOfFiles % 2 == 1) {
+                File file = new File(filesPrefix + Integer.toString(phase) + "_" + Integer.toString(numOfFiles - 1));
+                File file2 = new File(filesPrefix + Integer.toString(phase + 1) + "_" + Integer.toString(newIndex));
+                file.renameTo(file2);
+                newIndex++;
+            }
+            numOfFiles = newIndex;
+            newIndex = 0;
+            phase++;
+        }
+
+        System.out.println("merge to for " + filesPrefix + ": " + Double.toString(((System.nanoTime() - start) * 0.000000001)/60) + " minutes");
+        return filesPrefix + Integer.toString(phase + 1) + "_0";
+    }
+
+    private boolean parseReviews() {
+        int ret;
+        while (true) {
+            ret = this.getReview();
+            if (ret != PARSE_SUCCESSFUL_HAS_MORE_DATA){
+                break;
+            }
+            this.parseReview();
         }
 
         if (ret == FAILED_TO_PARSE) {
@@ -144,15 +252,19 @@ public class SlowIndexWriter {
             return;
         }
 
-        if (!this.parseReviews()) {
+        if(!this.buildDic()) {
             return;
         }
 
-        this.tokenDone();
-        this.productDone();
-        this.reviewDone();
-
-        encodeIndices();
+        //        if (!this.parseReviews()) {
+        //            return;
+        //        }
+        //
+        //        this.tokenDone();
+        //        this.productDone();
+        //        this.reviewDone();
+        //
+        //        encodeIndices();
     }
 
     /**
@@ -273,9 +385,8 @@ public class SlowIndexWriter {
      * 1 if parsed the review successfully and reached the end of the file
      * -1 if failed to parse the next review from the file
      */
-    private int parseReview() {
+    private int getReview() {
         String line;
-        String[] res = new String[4];
         int resIndex = 0;
         int retVal = PARSE_SUCCESSFUL_HAS_MORE_DATA;
         boolean flag =  false, firstRun = true;
@@ -295,7 +406,7 @@ public class SlowIndexWriter {
                     break;
                 }
                 if (resIndex <= LAST_INPUT_INDEX && line.startsWith(PARSE_NAMES[resIndex])) {
-                    res[resIndex] = line.substring(PARSE_NAMES[resIndex].length()).trim();
+                    this.reviewBuffer[resIndex] = line.substring(PARSE_NAMES[resIndex].length()).trim();
                     if(resIndex == LAST_INPUT_INDEX) {
                         flag = true;
                     }
@@ -307,19 +418,50 @@ public class SlowIndexWriter {
             e.printStackTrace();
             return FAILED_TO_PARSE;
         }
-        String[] tokenList = res[RESULT_TEXT_INDEX].toLowerCase().replaceAll("[\\W]|_", " ").split(" +");
-        this.updateReviewMap(res[RESULT_PRODUCT_ID_INDEX],
-                res[RESULT_HELPFULNESS_INDEX],
-                res[RESULT_SCORE_INDEX],
+        return retVal;
+    }
+
+    private void parseReview() {
+        String[] tokenList = this.reviewBuffer[RESULT_TEXT_INDEX].toLowerCase().replaceAll("[\\W]|_", " ").split(" +");
+        this.updateReviewMap(this.reviewBuffer[RESULT_PRODUCT_ID_INDEX],
+                this.reviewBuffer[RESULT_HELPFULNESS_INDEX],
+                this.reviewBuffer[RESULT_SCORE_INDEX],
                 tokenList.length);
-        this.updateProductMap(res[RESULT_PRODUCT_ID_INDEX]);
+        this.updateProductMap(this.reviewBuffer[RESULT_PRODUCT_ID_INDEX]);
         for (int i = 0; i < tokenList.length; i++) {
             if (tokenList[i].length() > 0) {
                 this.updateTokenMap(tokenList[i]);
             }
         }
         this.currentReviewId++;
-        return retVal;
+    }
+
+    private static void emptySet(HashSet<String> set, String path) {
+        String[] dataArray = new String[set.size()];
+        int i = 0;
+        for (Iterator<String> it = set.iterator(); it.hasNext();) {
+            String element = it.next();
+            dataArray[i] = element;
+            i++;
+            it.remove();
+        }
+        Arrays.sort(dataArray);
+        writeDicFile(path, dataArray);
+        dataArray = null;
+    }
+
+    private static boolean writeDicFile(String path, String[] data) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(path))) {
+            String lines = "";
+            for (String line : data) {
+                lines += line + "\n";
+            }
+            bw.write(lines);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private void writeMetadata() {

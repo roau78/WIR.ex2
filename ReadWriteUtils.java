@@ -1,8 +1,14 @@
 package webdata;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.EOFException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -41,6 +47,75 @@ public class ReadWriteUtils {
     static final int MAX_NUM_OF_TOKENS_IN_REVIEW_INDEX = 11;
 
     static HashMap<Character, Byte> charCoder;
+
+    public static boolean deleteFile(String filePath) {
+        try {
+            File file = new File(filePath);
+            if(!file.delete()){
+                System.out.println("Failed to delete " + file.getName());
+                return false;
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean sortedFilesMerger(String filePath1, String filePath2, String outfilePath, int bufSize) {
+        try {
+            BufferedReader f1 = new BufferedReader(new FileReader(filePath1));
+            BufferedReader f2 = new BufferedReader(new FileReader(filePath2));
+            BufferedWriter bw = new BufferedWriter(new FileWriter(outfilePath));
+            String[] buf = new String[bufSize];
+            String p1 = f1.readLine(), p2 = f2.readLine();
+            int index = 0, res;
+            while(true) {
+                if (p1 == null && p2 == null) {
+                    for (int i = 0; i < index; i++) {
+                        bw.write(buf[i] + "\n");
+                    }
+                    break;
+                } else if (p1 == null) {
+                    buf[index] = p2;
+                    p2 = f2.readLine();
+                } else if (p2 == null) {
+                    buf[index] = p1;
+                    p1 = f1.readLine();
+                } else {
+                    res = p1.compareTo(p2);
+                    if (res == 0) {
+                        buf[index] = p1;
+                        p1 = f1.readLine();
+                        p2 = f2.readLine();
+                    } else if (res < 0) {
+                        buf[index] = p1;
+                        p1 = f1.readLine();
+                    } else {
+                        buf[index] = p2;
+                        p2 = f2.readLine();
+                    }
+                }
+                index++;
+                if (index == bufSize) {
+                    String words = "";
+                    for (String word : buf) {
+                        words += word + "\n";
+                    }
+                    bw.write(words);
+                    index = 0;
+                }
+            }
+            f1.close();
+            f2.close();
+            bw.close();
+        } catch (IOException e) {
+            System.out.println("Merger failed");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
 
     //////////////////////////////////////////////////////////////////////////
     //  Write functions		Write functions		Write functions
