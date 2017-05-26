@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.Enumeration;
 
 public class Main {
-	static final String INPUT_DIR = "/home/roau78/Documents/ex2/ex2/src/webdata/";
+	static final String INPUT_DIR = "/home/roau78/Documents/WIR/ex2/src/webdata/";
 	
     static final String INPUT_FILE = INPUT_DIR + "1000.txt";
-    static final String OUT_DIR = "/home/roau78/Documents/ex2/ex2/tempFiles";
+    static final String OUT_DIR = "/home/roau78/Documents/WIR/ex2/tempFiles";
     
     public static void main(String[] args) throws IOException, ClassNotFoundException {
     	SlowIndexWriter x = new SlowIndexWriter();
@@ -28,127 +28,163 @@ public class Main {
 //    	
 //    	
 //    }
+
+    public static void handleError(String msg) throws Exception{
+    	throw new Exception(msg);
+    }
     
     
-    public static void main00(String[] args) throws IOException, ClassNotFoundException {
+    //NOTICE!! works only on "100.txt" file
+    public static void main00(String[] args) throws Exception, IOException, ClassNotFoundException {
 
         SlowIndexWriter x = new SlowIndexWriter();
-        x.slowWrite(INPUT_FILE, OUT_DIR);
-        IndexReader y = new IndexReader("/home/tester/workspace/info_ret/new");
+        x.slowWrite(INPUT_DIR + "100.txt", OUT_DIR); //NOTICE!! works only on "100.txt" file
+        IndexReader y = new IndexReader(OUT_DIR);
         System.out.println("--------------------------------");
-        long startTime = System.nanoTime();
+        
+        
+//        long startTime = System.nanoTime();
+//        long estimatedTime = System.nanoTime() - startTime;
+//        System.out.println("estimatedTime:" + estimatedTime + " in nano sec"); // 208159
 
-        System.out.println("product id:" + y.getProductId(0)); // null
-        System.out.println("product id:" + y.getProductId(1)); // B001E4KFG0
-        System.out.println("product id:" + y.getProductId(2)); // B00813GRG4
-        System.out.println("product id:" + y.getProductId(4)); // B000UA0QIQ
-        System.out.println("product id:" + y.getProductId(5)); // B006K2ZZ7K
-        System.out.println("product id:" + y.getProductId(105)); // null
-
-        long estimatedTime = System.nanoTime() - startTime;
-        System.out.println("estimatedTime:" + estimatedTime + " in nano sec"); // 208159
-
-        System.out.println("--------------------------------");
+        
+        
+        if(y.getProductId(0) != null) handleError("");
+        if(!y.getProductId(1).equals("B001E4KFG0")) handleError("");
+        if(!y.getProductId(2).equals("B00813GRG4")) handleError("");
+        if(!y.getProductId(4).equals("B000UA0QIQ")) handleError("");
+        if(!y.getProductId(5).equals("B006K2ZZ7K")) handleError("");
+        if(y.getProductId(105) != null) handleError("");
 
 
-        System.out.println("score id:" + y.getReviewScore(0)); // -1
-        System.out.println("score id:" + y.getReviewScore(1)); // 5
-        System.out.println("score id:" + y.getReviewScore(2)); // 1
-        System.out.println("score id:" + y.getReviewScore(4)); // 2
-        System.out.println("score id:" + y.getReviewScore(5)); // 5
-        System.out.println("score id:" + y.getReviewScore(105)); // -1
+    	System.out.println("getProductId Passed");
         System.out.println("--------------------------------");
 
-        System.out.println("Numerator id:" + y.getReviewHelpfulnessNumerator(0)); // -1
-        System.out.println("Numerator id:" + y.getReviewHelpfulnessNumerator(1)); // 1
-        System.out.println("Numerator id:" + y.getReviewHelpfulnessNumerator(2)); // 0
-        System.out.println("Numerator id:" + y.getReviewHelpfulnessNumerator(4)); // 3
-        System.out.println("Numerator id:" + y.getReviewHelpfulnessNumerator(5)); // 0
-        System.out.println("Numerator id:" + y.getReviewHelpfulnessNumerator(105)); // -1
+
+        if(y.getReviewScore(0) != -1) handleError("");
+        if(y.getReviewScore(1) != 5) handleError("");
+        if(y.getReviewScore(2) != 1) handleError("");
+        if(y.getReviewScore(4) != 2) handleError("");
+        if(y.getReviewScore(5) != 5) handleError("");
+        if(y.getReviewScore(105) != -1) handleError("");
+
+    	System.out.println("getReviewScore Passed");
         System.out.println("--------------------------------");
 
-        System.out.println("Denominator id:" + y.getReviewHelpfulnessDenominator(0)); // -1
-        System.out.println("Denominator id:" + y.getReviewHelpfulnessDenominator(1)); // 1
-        System.out.println("Denominator id:" + y.getReviewHelpfulnessDenominator(2)); // 0
-        System.out.println("Denominator id:" + y.getReviewHelpfulnessDenominator(4)); // 3
-        System.out.println("Denominator id:" + y.getReviewHelpfulnessDenominator(5)); // 0
-        System.out.println("Denominator id:" + y.getReviewHelpfulnessDenominator(105)); // -1
+
+        if(y.getReviewHelpfulnessNumerator(0) != -1) handleError("");
+        if(y.getReviewHelpfulnessNumerator(1) != 1) handleError("");
+        if(y.getReviewHelpfulnessNumerator(2) != 0) handleError("");
+        if(y.getReviewHelpfulnessNumerator(4) != 3) handleError("");
+        if(y.getReviewHelpfulnessNumerator(5) != 0) handleError("");
+        if(y.getReviewHelpfulnessNumerator(105) != -1) handleError("");
+
+    	System.out.println("getReviewHelpfulnessNumerator Passed");
         System.out.println("--------------------------------");
 
-        startTime = System.nanoTime();
+        if(y.getReviewHelpfulnessDenominator(0) != -1) handleError("");
+        if(y.getReviewHelpfulnessDenominator(1) != 1) handleError("");
+        if(y.getReviewHelpfulnessDenominator(2) != 0) handleError("");
+        if(y.getReviewHelpfulnessDenominator(4) != 3) handleError("");
+        if(y.getReviewHelpfulnessDenominator(5) != 0) handleError("");
+        if(y.getReviewHelpfulnessDenominator(105) != -1) handleError("");
 
-        System.out.println("Frequency token:" + y.getTokenFrequency("WArdroBe")); // 1
-        System.out.println("Frequency token:" + y.getTokenFrequency("taffy")); // 4
-        System.out.println("Frequency token:" + y.getTokenFrequency("because")); // 11
-        System.out.println("Frequency token:" + y.getTokenFrequency("watermelon")); // 1
-        System.out.println("Frequency token:" + y.getTokenFrequency("fdgdfgdfgdfgdfgdfg")); // 0
-        System.out.println("Frequency token:" + y.getTokenFrequency("i")); // 76
-
-        estimatedTime = System.nanoTime() - startTime;
-        System.out.println("estimatedTime:" + estimatedTime + " in nano sec"); // 2418886
-
+    	System.out.println("getReviewHelpfulnessDenominator Passed");
         System.out.println("--------------------------------");
 
-        System.out.println("Collection Frequency token:" + y.getTokenCollectionFrequency("WArdroBe")); // 1
-        System.out.println("Collection Frequency token:" + y.getTokenCollectionFrequency("because")); // 13
-        System.out.println("Collection Frequency token:" + y.getTokenCollectionFrequency("taffy")); // 8
-        System.out.println("Collection Frequency token:" + y.getTokenCollectionFrequency("watermelon")); // 1
-        System.out.println("Collection Frequency token:" + y.getTokenCollectionFrequency("fdgdfgdfgdfgdfgdfg")); // 0
-        System.out.println("Collection Frequency token:" + y.getTokenCollectionFrequency("i")); // 195
+
+        if(y.getTokenFrequency("WArdroBe") != 1) handleError("");
+        if(y.getTokenFrequency("taffy") != 4) handleError("");
+        if(y.getTokenFrequency("because") != 11) handleError("");
+        if(y.getTokenFrequency("watermelon") != 1) handleError("");
+        if(y.getTokenFrequency("fdgdfgdfgdfgdfgdfg") != 0) handleError("");
+        if(y.getTokenFrequency("i") != 78) handleError("");
+
+
+    	System.out.println("getTokenFrequency Passed");
         System.out.println("--------------------------------");
 
-        startTime =  System.nanoTime();
+        if(y.getTokenCollectionFrequency("WArdroBe") != 1) handleError("");
+        if(y.getTokenCollectionFrequency("because") != 13) handleError("");
+        if(y.getTokenCollectionFrequency("taffy") != 8) handleError("");
+        if(y.getTokenCollectionFrequency("watermelon") != 1) handleError("");
+        if(y.getTokenCollectionFrequency("fdgdfgdfgdfgdfgdfg") != 0) handleError("");
+        if(y.getTokenCollectionFrequency("i") != 227) handleError("");
+        
+    	System.out.println("getTokenCollectionFrequency Passed");
+        System.out.println("--------------------------------");
+
 
         Enumeration<Integer> array4 = y.getReviewsWithToken("taffy");
-        estimatedTime = System.nanoTime() - startTime;
-        System.out.println("estimatedTime:" + estimatedTime + " in nano sec"); // 397644
-
+        Integer[] array4answar = {5,3,6,3,7,1,8,1}; // (5,3),(6,3),(7,1),(8,1)
+        int i = 0;
         while (array4.hasMoreElements()){
-            System.out.println("reviews with token taffy:"+ array4.nextElement());
-        } // (5,3),(6,3),(7,1),(8,1)
+        	if(array4.nextElement() != array4answar[i]) handleError("taffy at i=" + i);
+        	i++;
+        } 
 
-
-
-        System.out.println("--------------------------------");
 
         Enumeration<Integer> array5 = y.getReviewsWithToken("WArdroBe");
+        Integer[] array5answar = {3,1};// (3,1)
+        i = 0;
         while (array5.hasMoreElements()){
-            System.out.println("reviews with token WArdroBe:"+ array5.nextElement());
-        } // (3,1)
+        	if(array5.nextElement() != array5answar[i]) handleError("WArdroBe at i=" + i);
+        	i++;
+        }
+
+    	System.out.println("getReviewsWithToken Passed");
+        System.out.println("--------------------------------");
+        
+        
+        if(y.getReviewLength(0) != -1) handleError("");
+        if(y.getReviewLength(1) != 48) handleError("");
+        if(y.getReviewLength(2) != 32) handleError("");
+        if(y.getReviewLength(3) != 93) handleError("");
+        if(y.getReviewLength(4) != 41) handleError("");
+        if(y.getReviewLength(5) != 27) handleError("");
+        if(y.getReviewLength(105) != -1) handleError("");
+    	System.out.println("getReviewLength Passed");
+        System.out.println("--------------------------------");
+        
+        
+
+        if(y.getTokenSizeOfReviews() != 6903) handleError("");
+    	System.out.println("getTokenSizeOfReviews Passed");
         System.out.println("--------------------------------");
 
-        System.out.println("length id:" + y.getReviewLength(0)); // -1
-        System.out.println("length id:" + y.getReviewLength(1)); // 39
-        System.out.println("length id:" + y.getReviewLength(2)); // 25
-        System.out.println("length id:" + y.getReviewLength(3)); // 63
-        System.out.println("length id:" + y.getReviewLength(4)); // 35
-        System.out.println("length id:" + y.getReviewLength(5)); // 20
-        System.out.println("length id:" + y.getReviewLength(105)); // -1
-        System.out.println("--------------------------------");
-
-        System.out.println("tokens:" + y.getTokenSizeOfReviews()); // 6766
-        System.out.println("--------------------------------");
-
+        
+        
+        
         Enumeration<Integer> array1 = y.getProductReviews("B001E4KFG0");
+        
+        Integer[] array1answar = {1}; // 1
+        i = 0;
         while (array1.hasMoreElements()){
-            System.out.println("reviews with productId B001E4KFG0:"+ array1.nextElement());
-        } // 1
-
-        System.out.println("--------------------------------");
+        	if(array1.nextElement() != array1answar[i]) handleError("B001E4KFG0 at i=" + i);
+        	i++;
+        }
 
 
         Enumeration<Integer> array2 = y.getProductReviews("B001GVISJM");
+        
+        Integer[] array2answar = {14,15,16,17,18,19,20,21,22,23,24,25,26,27,28}; // 1
+        i = 0;
         while (array2.hasMoreElements()){
-            System.out.println("reviews with productId B001GVISJM:"+array2.nextElement());
-        } // 14-28
+        	if(array2.nextElement() != array2answar[i]) handleError("B001GVISJM at i=" + i);
+        	i++;
+        }
 
-        System.out.println("--------------------------------");
 
         Enumeration<Integer> array3 = y.getProductReviews("B0fdgdfgfdgdfg01GVISJM"); // null
         if (array3.hasMoreElements()){
-            System.out.println("suppose to be empty");
+        	handleError("suppose to be empty");
         }
 
-//        x.removeIndex(OUT_DIR);
+    	System.out.println("getProductReviews Passed");
+        System.out.println("--------------------------------");
+        
+        x.removeIndex(OUT_DIR);
+
+    	System.out.println("\n\nTEST PASSED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 }
