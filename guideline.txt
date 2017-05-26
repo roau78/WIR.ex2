@@ -17,6 +17,6 @@ run on the raw data:
 TODO:
 threshhold that determine wheter to read the product id file or not
 merge files with threads
-    
+check out very small numbers at the buffer constants (array index out of bound etc...)
     
     
