@@ -132,6 +132,7 @@ public class SlowIndexWriter {
         }
         return true;
     }
+//    
 	
     private boolean buildDic() {
         long start = System.nanoTime();
