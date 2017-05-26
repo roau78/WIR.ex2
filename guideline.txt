@@ -1,0 +1,22 @@
+run on the raw data:
+    1) create all of the structs.
+    2) fill buffer of tokens:
+        
+    3) fill buffer of products:
+    
+    4) fill buffer of reviewData:
+    
+    5) fill buffer of TokenData:
+    
+    6) fill buffer of ProductData:
+    
+    //TO WRITE: what about the indeices and the metadata
+    
+    
+    
+TODO:
+threshhold that determine wheter to read the product id file or not
+merge files with threads
+    
+    
+    
