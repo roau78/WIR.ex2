@@ -139,6 +139,9 @@ public class SlowIndexWriter {
         String tokenFilePath = this.dirPath + "/tFile_";
         String phase0 = "0_";
         int productFileIndex = 0, tokenFileIndex = 0;
+        String[] tokenArray = new String[MAX_WORDS_PER_FILE];
+        String[] productArray = new String[MAX_WORDS_PER_FILE];
+        int tokenArrayIndex = 0, productArrayIndex = 0;
 
         int ret;
         while (true) {
@@ -150,7 +153,13 @@ public class SlowIndexWriter {
             String[] tokenList = this.reviewBuffer[RESULT_TEXT_INDEX].toLowerCase().replaceAll("[\\W]|_", " ").split(" +");
             for (int i = 0; i < tokenList.length; i++) {
                 if (tokenList[i].length() > 0) {
-                    this.tokenSet.add(tokenList[i]);
+                	tokenArray[tokenArrayIndex] = tokenList[i];
+                	tokenArrayIndex++;
+                    if (tokenArrayIndex == MAX_WORDS_PER_FILE) {
+                    	Arrays.sort(tokenArray);
+                    	writeDicFile(productFilePath + phase0 + Integer.toString(productFileIndex), tokenArray);
+                    	
+                    }
                 }
             }
 
