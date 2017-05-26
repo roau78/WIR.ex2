@@ -48,6 +48,46 @@ public class ReadWriteUtils {
 
     static HashMap<Character, Byte> charCoder;
 
+	public static void quickSort(String[] arr, int low, int high) {
+		high--;
+		if (arr == null || arr.length == 0)
+			return;
+ 
+		if (low >= high)
+			return;
+ 
+		// pick the pivot
+		int middle = low + (high - low) / 2;
+		String pivot = arr[middle];
+ 
+		// make left < pivot and right > pivot
+		int i = low, j = high;
+		while (i <= j) {
+			while (arr[i].compareTo(pivot) < 0) {
+				i++;
+			}
+ 
+			while (arr[j].compareTo(pivot) > 0) {
+				j--;
+			}
+ 
+			if (i <= j) {
+				String temp = arr[i];
+				arr[i] = arr[j];
+				arr[j] = temp;
+				i++;
+				j--;
+			}
+		}
+ 
+		// recursively sort two sub parts
+		if (low < j)
+			quickSort(arr, low, j);
+ 
+		if (high > i)
+			quickSort(arr, i, high);
+	}
+
     public static boolean deleteFile(String filePath) {
         try {
             File file = new File(filePath);

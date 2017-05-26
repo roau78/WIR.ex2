@@ -84,7 +84,7 @@ public class SlowIndexWriter {
     private ArrayList<ReviewData> reviewListTemp;
     private ArrayList<Integer> reviewDataList;
 
-    private static final int MAX_WORDS_PER_FILE = 10000;
+    private static final int MAX_WORDS_PER_FILE = 2000000;
     private static final int MERGE_MAX_WORDS_BEFORE_WRITE_TO_DISK = 10000;
     private String inputFile;
     private String[] reviewBuffer;
@@ -132,7 +132,7 @@ public class SlowIndexWriter {
         }
         return true;
     }
-
+	
     private boolean buildDic() {
         long start = System.nanoTime();
         String productFilePath = this.dirPath + "/pFile_";
@@ -149,44 +149,54 @@ public class SlowIndexWriter {
             if (ret != PARSE_SUCCESSFUL_HAS_MORE_DATA){
                 break;
             }
-            this.productSet.add(this.reviewBuffer[RESULT_PRODUCT_ID_INDEX]);
+            
+            productArray[productArrayIndex] = this.reviewBuffer[RESULT_PRODUCT_ID_INDEX];
+            productArrayIndex++;
+            if (productArrayIndex == MAX_WORDS_PER_FILE) {
+//            	Arrays.sort(productArray);
+            	ReadWriteUtils.quickSort(productArray, 0, productArrayIndex);
+            	writeDicFile(productFilePath + phase0 + Integer.toString(productFileIndex), productArray, productArrayIndex);
+            	productFileIndex++;
+            	productArrayIndex = 0;
+            }
+            
             String[] tokenList = this.reviewBuffer[RESULT_TEXT_INDEX].toLowerCase().replaceAll("[\\W]|_", " ").split(" +");
             for (int i = 0; i < tokenList.length; i++) {
                 if (tokenList[i].length() > 0) {
                 	tokenArray[tokenArrayIndex] = tokenList[i];
                 	tokenArrayIndex++;
                     if (tokenArrayIndex == MAX_WORDS_PER_FILE) {
-                    	Arrays.sort(tokenArray);
-                    	writeDicFile(productFilePath + phase0 + Integer.toString(productFileIndex), tokenArray);
-                    	
+//                    	Arrays.sort(tokenArray);
+                    	ReadWriteUtils.quickSort(tokenArray, 0, tokenArrayIndex);
+                    	writeDicFile(tokenFilePath + phase0 + Integer.toString(tokenFileIndex), tokenArray, tokenArrayIndex);
+                    	tokenArrayIndex = 0;
+                    	tokenFileIndex++;
                     }
                 }
             }
 
-            if (this.productSet.size() >= MAX_WORDS_PER_FILE) {
-                emptySet(this.productSet, productFilePath + phase0 + Integer.toString(productFileIndex));
-                productFileIndex++;
-            }
-
-            if (this.tokenSet.size() >= MAX_WORDS_PER_FILE) {
-                emptySet(this.tokenSet, tokenFilePath + phase0 + Integer.toString(tokenFileIndex));
-                tokenFileIndex++;
-            }
         }
 
         if (ret == FAILED_TO_PARSE) {
             return false;
         }
 
-        if (this.productSet.size() > 0) {
-            emptySet(this.productSet, productFilePath + phase0 + Integer.toString(productFileIndex));
-            productFileIndex++;
+        if (productArrayIndex > 0) {
+//        	Arrays.sort(productArray, 0, productArrayIndex);
+        	ReadWriteUtils.quickSort(productArray, 0, productArrayIndex);
+        	writeDicFile(productFilePath + phase0 + Integer.toString(productFileIndex), productArray, productArrayIndex);
+        	productArrayIndex = 0;
+        	productFileIndex++;
         }
 
-        if (this.tokenSet.size() > 0) {
-            emptySet(this.tokenSet, tokenFilePath + phase0 + Integer.toString(tokenFileIndex));
-            tokenFileIndex++;
+        if (tokenArrayIndex > 0) {
+        	ReadWriteUtils.quickSort(tokenArray, 0, tokenArrayIndex);
+//        	Arrays.sort(tokenArray, 0, tokenArrayIndex);
+        	writeDicFile(tokenFilePath + phase0 + Integer.toString(tokenFileIndex), tokenArray, tokenArrayIndex);
+        	tokenArrayIndex = 0;
+        	tokenFileIndex++;
         }
+
         this.tokeDicPath = this.mergeDicFiles(tokenFilePath, tokenFileIndex);
         this.productDicPath = this.mergeDicFiles(productFilePath, productFileIndex);
 
@@ -455,15 +465,19 @@ public class SlowIndexWriter {
             it.remove();
         }
         Arrays.sort(dataArray);
-        writeDicFile(path, dataArray);
+//        writeDicFile(path, dataArray);
         dataArray = null;
     }
 
-    private static boolean writeDicFile(String path, String[] data) {
+    private static boolean writeDicFile(String path, String[] data, int length) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(path))) {
-            String lines = "";
-            for (String line : data) {
-                lines += line + "\n";
+            String lines = "", prev = null;
+            length = Math.min(data.length, length);
+            for (int i = 0; i < length; i++) {
+            	if (prev == null || !prev.equals(data[i])) {
+            		lines += data[i] + "\n";
+            	}
+            	prev = data[i];
             }
             bw.write(lines);
             return true;
