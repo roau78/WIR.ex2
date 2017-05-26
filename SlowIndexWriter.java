@@ -149,7 +149,7 @@ public class SlowIndexWriter {
             if (ret != PARSE_SUCCESSFUL_HAS_MORE_DATA){
                 break;
             }
-            
+//            
             productArray[productArrayIndex] = this.reviewBuffer[RESULT_PRODUCT_ID_INDEX];
             productArrayIndex++;
             if (productArrayIndex == MAX_WORDS_PER_FILE) {
